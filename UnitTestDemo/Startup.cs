@@ -2,14 +2,17 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UnitTestDemo.Data;
 
 namespace UnitTestDemo
 {
@@ -26,6 +29,17 @@ namespace UnitTestDemo
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddDbContext<EmployeeContext>(options => options.UseSqlServer(
+                Configuration.GetConnectionString("EmployeeConnection")
+             ));
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "UnitTest_Mock", Version = "v1" });
+            });
+
+            services.AddScoped<IEmployeeService, EmployeeService>();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -34,6 +48,8 @@ namespace UnitTestDemo
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "UnitTest_Mock v1"));
             }
 
             app.UseHttpsRedirection();
